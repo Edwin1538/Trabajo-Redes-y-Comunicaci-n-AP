@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Access Point (AP) - Universidad</title>
+  <title>Simulador Interactivo de Access Point (AP)</title>
   <style>
     :root {
       --bg-dark: #0f172a;
@@ -16,45 +16,45 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; }
+    body { background-color: var(--bg-dark); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
     header {
-      background: #1e293b; padding: 1rem 2rem; border-bottom: 1px solid #334155;
-      display: flex; justify-content: space-between; align-items: center;
+      background: #1e293b; padding: 0.8rem 1.5rem; border-bottom: 1px solid #334155;
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
     }
-    header h1 { font-size: 1.3rem; color: var(--primary); }
+    header h1 { font-size: 1.2rem; color: var(--primary); }
     
     /* Navigation Tabs */
     nav { display: flex; gap: 8px; }
     .nav-btn {
       background: #0f172a; color: var(--subtext); border: 1px solid #334155;
-      padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+      padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem;
       transition: all 0.2s;
     }
     .nav-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
 
     /* Screen Management */
-    .screen { display: none; flex: 1; position: relative; }
+    .screen { display: none; flex: 1; position: relative; overflow: hidden; }
     .screen.active { display: flex; }
 
     /* Screen 1: Canvas Simulation */
-    .simulation-area { flex: 1; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); }
+    .simulation-area { flex: 1; position: relative; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); overflow: hidden; }
     canvas { display: block; width: 100%; height: 100%; }
 
     .controls-bar {
-      position: absolute; top: 15px; left: 15px; right: 15px;
-      background: rgba(30, 41, 59, 0.9); backdrop-filter: blur(8px);
-      padding: 12px 20px; border-radius: 12px; border: 1px solid #334155;
-      display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;
+      position: absolute; top: 12px; left: 12px; right: 12px;
+      background: rgba(30, 41, 59, 0.92); backdrop-filter: blur(8px);
+      padding: 10px 16px; border-radius: 10px; border: 1px solid #334155;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
       z-index: 10;
     }
 
-    .control-group { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+    .control-group { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
     .control-group label { color: var(--subtext); font-weight: 600; }
     
     select, button {
       background: #0f172a; color: var(--text); border: 1px solid #475569;
-      padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer;
+      padding: 6px 10px; border-radius: 6px; font-size: 0.82rem; cursor: pointer;
       transition: all 0.2s;
     }
     button:hover { background: #334155; border-color: var(--primary); }
@@ -63,32 +63,32 @@
     button.danger:hover { background: var(--danger); color: #fff; }
 
     .side-panel {
-      width: 300px; background: var(--card-bg); border-left: 1px solid #334155;
-      padding: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 5;
+      width: 280px; background: var(--card-bg); border-left: 1px solid #334155;
+      padding: 15px; display: flex; flex-direction: column; gap: 15px; z-index: 5; flex-shrink: 0;
     }
-    .panel-card { background: #0f172a; border-radius: 8px; padding: 15px; border: 1px solid #334155; }
-    .panel-card h3 { font-size: 0.95rem; color: var(--primary); margin-bottom: 8px; }
-    .panel-card p { font-size: 0.85rem; color: var(--subtext); line-height: 1.4; }
+    .panel-card { background: #0f172a; border-radius: 8px; padding: 12px; border: 1px solid #334155; }
+    .panel-card h3 { font-size: 0.9rem; color: var(--primary); margin-bottom: 6px; }
+    .panel-card p { font-size: 0.8rem; color: var(--subtext); line-height: 1.3; }
 
     /* Screen 2: Brands & Info */
-    .info-container { padding: 30px; max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; width: 100%; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .info-box { background: var(--card-bg); padding: 20px; border-radius: 10px; border: 1px solid #334155; }
-    .info-box h2 { color: var(--primary); margin-bottom: 12px; font-size: 1.1rem; }
+    .info-container { padding: 25px; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; width: 100%; overflow-y: auto; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .info-box { background: var(--card-bg); padding: 18px; border-radius: 10px; border: 1px solid #334155; }
+    .info-box h2 { color: var(--primary); margin-bottom: 10px; font-size: 1rem; }
     .info-box ul { list-style: none; }
-    .info-box li { margin-bottom: 8px; font-size: 0.9rem; color: var(--subtext); line-height: 1.4; }
+    .info-box li { margin-bottom: 8px; font-size: 0.85rem; color: var(--subtext); line-height: 1.3; }
     .info-box li strong { color: var(--text); }
 
     /* Screen 3: Simplified Step-by-Step */
-    .steps-container { padding: 30px; max-width: 800px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 15px; }
-    .step-card { background: var(--card-bg); border-left: 4px solid var(--primary); padding: 18px; border-radius: 8px; border-top: 1px solid #334155; border-right: 1px solid #334155; border-bottom: 1px solid #334155; }
-    .step-card h3 { color: var(--text); font-size: 1rem; margin-bottom: 6px; }
-    .step-card p { color: var(--subtext); font-size: 0.88rem; line-height: 1.4; }
+    .steps-container { padding: 25px; max-width: 750px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+    .step-card { background: var(--card-bg); border-left: 4px solid var(--primary); padding: 15px; border-radius: 8px; border-top: 1px solid #334155; border-right: 1px solid #334155; border-bottom: 1px solid #334155; }
+    .step-card h3 { color: var(--text); font-size: 0.95rem; margin-bottom: 4px; }
+    .step-card p { color: var(--subtext); font-size: 0.85rem; line-height: 1.3; }
 
     .drag-hint {
-      position: absolute; bottom: 15px; left: 15px;
-      background: rgba(0,0,0,0.7); color: var(--primary);
-      padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+      position: absolute; bottom: 12px; left: 12px;
+      background: rgba(0,0,0,0.75); color: var(--primary);
+      padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; pointer-events: none; opacity: 0; transition: opacity 0.3s;
     }
     .drag-hint.visible { opacity: 1; }
   </style>
@@ -98,9 +98,9 @@
   <header>
     <h1>Simulador Interactivo: Access Point (AP)</h1>
     <nav>
-      <button class="nav-btn active" onclick="switchTab('tab-sim')">🎮 Simulador</button>
-      <button class="nav-btn" onclick="switchTab('tab-info')">🏢 Marcas y Características</button>
-      <button class="nav-btn" onclick="switchTab('tab-steps')">🔄 Paso a Paso</button>
+      <button class="nav-btn active" onclick="switchTab('tab-sim', this)">🎮 Simulador</button>
+      <button class="nav-btn" onclick="switchTab('tab-info', this)">🏢 Marcas y Características</button>
+      <button class="nav-btn" onclick="switchTab('tab-steps', this)">🔄 Paso a Paso</button>
     </nav>
   </header>
 
@@ -111,28 +111,28 @@
         <div class="control-group">
           <label>Frecuencia:</label>
           <select id="freqSelect">
-            <option value="2.4">2.4 GHz (Mayor alcance, menor velocidad)</option>
-            <option value="5.0">5.0 GHz (Súper rápida, menor alcance)</option>
+            <option value="2.4">2.4 GHz (Mayor alcance)</option>
+            <option value="5.0">5.0 GHz (Súper rápida)</option>
           </select>
         </div>
 
         <div class="control-group">
-          <label>Canal:</label>
+          <label>Canal Wi-Fi:</label>
           <select id="channelSelect">
-            <option value="1">Canal 1 (Limpio)</option>
-            <option value="6" selected>Canal 6 (Limpio)</option>
-            <option value="11">Canal 11 (Limpio)</option>
+            <option value="1">Canal 1 (2412 MHz)</option>
+            <option value="6" selected>Canal 6 (2437 MHz)</option>
+            <option value="11">Canal 11 (2462 MHz)</option>
           </select>
         </div>
 
         <div class="control-group">
-          <button id="toggleTrafficBtn">▶ Enviar Datos (Ping)</button>
+          <button id="toggleTrafficBtn">▶ Trafico Bidireccional</button>
           <button id="toggleObstacleBtn">🧱 Colocar Pared Movible</button>
           <button id="addDeviceBtn">+ Añadir Dispositivo</button>
         </div>
       </div>
 
-      <div class="drag-hint" id="dragHint">💡 ¡Haz clic y arrastra la pared a cualquier posición!</div>
+      <div class="drag-hint" id="dragHint">💡 ¡Arrastra la pared para bloquear la señal!</div>
       <canvas id="wifiCanvas"></canvas>
     </div>
 
@@ -140,18 +140,23 @@
       <div class="panel-card" id="inspectorCard">
         <h3>🔍 Inspector de Dispositivo</h3>
         <p id="inspectText">Haz clic en cualquier teléfono o laptop para ver su estado o eliminarlo.</p>
-        <div id="inspectDetails" style="display:none; margin-top:10px;">
+        <div id="inspectDetails" style="display:none; margin-top:8px;">
           <p><strong>Tipo:</strong> <span id="devType">-</span></p>
           <p><strong>Dirección MAC:</strong> <span id="devMac">-</span></p>
           <p><strong>Potencia Señal:</strong> <span id="devRssi">-</span></p>
-          <button id="deleteDevBtn" class="danger" style="margin-top:12px; width:100%;">🗑️ Eliminar Dispositivo</button>
+          <button id="deleteDevBtn" class="danger" style="margin-top:10px; width:100%;">🗑️ Eliminar Dispositivo</button>
         </div>
       </div>
 
       <div class="panel-card">
         <h3>⚙️ Controles de Pared</h3>
-        <p style="margin-bottom: 10px;">Si agregaste una pared, puedes quitarla en cualquier momento:</p>
+        <p style="margin-bottom: 8px;">Elimina la pared si deseas limpiar el espacio:</p>
         <button id="removeWallBtn" class="danger" style="width:100%;">❌ Eliminar Pared</button>
+      </div>
+
+      <div class="panel-card">
+        <h3>💡 Nota Teórica</h3>
+        <p>Los datos en un AP van de <strong>Subida (Dispositivo ➔ AP)</strong> y de <strong>Bajada (AP ➔ Dispositivo)</strong> constantemente.</p>
       </div>
     </div>
   </div>
@@ -163,19 +168,19 @@
         <div class="info-box">
           <h2>🏆 Principales Marcas del Mercado</h2>
           <ul>
-            <li><strong>Cisco Meraki:</strong> Líder empresarial en la nube, ideal para grandes oficinas.</li>
-            <li><strong>Ubiquiti UniFi:</strong> Muy popular por su gran rendimiento, diseño y costo accesible.</li>
-            <li><strong>Aruba Networks:</strong> Altísima seguridad para corporativos y gobierno.</li>
-            <li><strong>TP-Link Omada:</strong> Opción económica y eficiente para pequeñas empresas.</li>
+            <li><strong>Cisco Meraki:</strong> Líder empresarial gestionado totalmente en la nube.</li>
+            <li><strong>Ubiquiti UniFi:</strong> Gran estándar en calidad/precio con interfaz centralizada.</li>
+            <li><strong>Aruba Networks:</strong> Especializado en altísima seguridad corporativa.</li>
+            <li><strong>TP-Link Omada:</strong> Solución económica para pequeñas y medianas empresas.</li>
           </ul>
         </div>
         <div class="info-box">
           <h2>⚖️ Ventajas y Desventajas</h2>
           <ul>
-            <li><strong>Ventaja:</strong> Permite conectar decenas de dispositivos sin cables.</li>
-            <li><strong>Ventaja:</strong> Fácil expansión de cobertura en edificios grandes.</li>
-            <li><strong>Desventaja:</strong> Las paredes e interferencias reducen la velocidad.</li>
-            <li><strong>Desventaja:</strong> Requiere cableado estructurado previo hasta el AP.</li>
+            <li><strong>Ventaja:</strong> Permite conectar decenas de clientes sin cables.</li>
+            <li><strong>Ventaja:</strong> Permite movilidad (Roaming) en áreas grandes.</li>
+            <li><strong>Desventaja:</strong> Las paredes disminuyen la potencia y velocidad.</li>
+            <li><strong>Desventaja:</strong> Requiere infraestructura física de red cableada hasta el AP.</li>
           </ul>
         </div>
       </div>
@@ -187,42 +192,42 @@
     <div class="steps-container">
       <div class="step-card">
         <h3>1. Anuncio del Access Point (Beacon)</h3>
-        <p>El AP emite constantemente ondas de radio al aire gritando: <em>"¡Hola a todos, soy la red UniFi y estoy disponible!"</em>.</p>
+        <p>El AP emite constantemente ondas de radio al aire notificando: <em>"¡Hola, soy la red UniFi y estoy lista para conectar!"</em>.</p>
       </div>
       <div class="step-card">
         <h3>2. Solicitud del Dispositivo</h3>
-        <p>Tu teléfono o laptop detecta esa señal y responde: <em>"¡Hola! Me quiero conectar contigo, ¿me das acceso?"</em>.</p>
+        <p>El celular o laptop detecta la red y envía una solicitud: <em>"¡Hola! Quiero conectarme contigo"</em>.</p>
       </div>
       <div class="step-card">
-        <h3>3. Validación de Clave (Autenticación)</h3>
-        <p>El AP verifica la contraseña de Wi-Fi. Si es correcta, le otorga un permiso digital de entrada al equipo.</p>
+        <h3>3. Verificación y Permiso</h3>
+        <p>El AP autentica las credenciales (contraseña) y le asigna acceso inalámbrico al equipo.</p>
       </div>
       <div class="step-card">
-        <h3>4. Intercambio de Datos</h3>
-        <p>¡Conexión exitosa! Se crea el puente de radiofrecuencia y empiezan a viajar tus mensajes, videos y fotos por el aire.</p>
+        <h3>4. Tráfico Bidireccional de Datos</h3>
+        <p>¡Conexión establecida! Los datos viajan desde el dispositivo hacia el AP (subida) y desde el AP hacia el dispositivo (bajada).</p>
       </div>
     </div>
   </div>
 
   <script>
-    // Tab switching logic
-    function switchTab(tabId) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       
       document.getElementById(tabId).classList.add('active');
-      event.target.classList.add('active');
+      btn.classList.add('active');
 
-      if(tabId === 'tab-sim') resizeCanvas();
+      if(tabId === 'tab-sim') {
+        setTimeout(resizeCanvas, 50);
+      }
     }
 
-    // Canvas Simulation Setup
     const canvas = document.getElementById('wifiCanvas');
     const ctx = canvas.getContext('2d');
     const simArea = document.getElementById('simArea');
 
-    // Controls
     const freqSelect = document.getElementById('freqSelect');
+    const channelSelect = document.getElementById('channelSelect');
     const toggleTrafficBtn = document.getElementById('toggleTrafficBtn');
     const toggleObstacleBtn = document.getElementById('toggleObstacleBtn');
     const removeWallBtn = document.getElementById('removeWallBtn');
@@ -239,16 +244,18 @@
     function resizeCanvas() {
       width = canvas.width = simArea.clientWidth;
       height = canvas.height = simArea.clientHeight;
+      ap.x = width / 2;
+      ap.y = height / 2;
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // State Variables
     let isTrafficActive = false;
     let isObstacleActive = false;
     let selectedDevice = null;
     let frequency = 2.4;
+    let currentChannel = "6";
 
-    const wall = { x: 0, y: 0, w: 22, h: 180, isDragging: false, dragOffsetX: 0, dragOffsetY: 0 };
+    const wall = { x: 0, y: 0, w: 20, h: 160, isDragging: false, dragOffsetX: 0, dragOffsetY: 0 };
     const ap = { x: 0, y: 0, radius: 25, ssid: "UniFi Lab Wi-Fi" };
 
     let devices = [];
@@ -257,16 +264,13 @@
 
     function initSimulation() {
       resizeCanvas();
-      ap.x = width / 2;
-      ap.y = height / 2;
-      
-      wall.x = ap.x + 100;
-      wall.y = ap.y - 90;
+      wall.x = ap.x + 110;
+      wall.y = ap.y - 80;
 
       devices = [
-        { id: 1, type: 'Laptop', x: ap.x - 180, y: ap.y - 70, mac: 'A4:C3:F0:12:88:01' },
-        { id: 2, type: 'Teléfono', x: ap.x + 210, y: ap.y + 60, mac: '88:DE:32:90:55:FF' },
-        { id: 3, type: 'IoT Cam', x: ap.x - 110, y: ap.y + 150, mac: '00:1B:44:11:3A:B7' }
+        { id: 1, type: 'Laptop', x: ap.x - 170, y: ap.y - 60, mac: 'A4:C3:F0:12:88:01' },
+        { id: 2, type: 'Teléfono', x: ap.x + 200, y: ap.y + 50, mac: '88:DE:32:90:55:FF' },
+        { id: 3, type: 'IoT Cam', x: ap.x - 100, y: ap.y + 140, mac: '00:1B:44:11:3A:B7' }
       ];
     }
 
@@ -283,7 +287,6 @@
       return false;
     }
 
-    // Drag & Selection
     let draggedDevice = null;
 
     canvas.addEventListener('mousedown', (e) => {
@@ -291,7 +294,6 @@
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
-      // Click on wall
       if (isObstacleActive && mouseX >= wall.x && mouseX <= wall.x + wall.w && mouseY >= wall.y && mouseY <= wall.y + wall.h) {
         wall.isDragging = true;
         wall.dragOffsetX = mouseX - wall.x;
@@ -299,7 +301,6 @@
         return;
       }
 
-      // Click on device
       let found = false;
       devices.forEach(dev => {
         const dist = Math.hypot(dev.x - mouseX, dev.y - mouseY);
@@ -350,7 +351,6 @@
       devRssiEl.textContent = `${rssi} dBm (${rssi > -65 ? 'Buena' : 'Débil'})`;
     }
 
-    // Button Events
     deleteDevBtn.addEventListener('click', () => {
       if (selectedDevice) {
         devices = devices.filter(d => d.id !== selectedDevice.id);
@@ -361,11 +361,12 @@
     });
 
     freqSelect.addEventListener('change', (e) => { frequency = parseFloat(e.target.value); });
+    channelSelect.addEventListener('change', (e) => { currentChannel = e.target.value; });
 
     toggleTrafficBtn.addEventListener('click', () => {
       isTrafficActive = !isTrafficActive;
       toggleTrafficBtn.classList.toggle('active', isTrafficActive);
-      toggleTrafficBtn.textContent = isTrafficActive ? "⏸ Detener Datos" : "▶ Enviar Datos (Ping)";
+      toggleTrafficBtn.textContent = isTrafficActive ? "⏸ Detener Tráfico" : "▶ Trafico Bidireccional";
     });
 
     toggleObstacleBtn.addEventListener('click', () => {
@@ -386,21 +387,20 @@
       devices.push({
         id: Date.now(),
         type: randomType,
-        x: ap.x + (Math.random() * 260 - 130),
-        y: ap.y + (Math.random() * 260 - 130),
+        x: ap.x + (Math.random() * 240 - 120),
+        y: ap.y + (Math.random() * 240 - 120),
         mac: `52:54:00:${Math.floor(Math.random()*89+10)}:${Math.floor(Math.random()*89+10)}:${Math.floor(Math.random()*89+10)}`
       });
     });
 
-    // Main Render Loop
     let waveTimer = 0, packetTimer = 0;
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
 
-      // Waves
+      // 1. Radio Waves
       waveTimer++;
-      if (waveTimer % (frequency === 2.4 ? 40 : 20) === 0) {
+      if (waveTimer % (frequency === 2.4 ? 40 : 22) === 0) {
         waves.push({ r: 10, alpha: 1 });
       }
 
@@ -413,11 +413,11 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        let maxRange = frequency === 2.4 ? 350 : 220;
+        let maxRange = frequency === 2.4 ? 320 : 200;
         if (w.r > maxRange || w.alpha <= 0) waves.splice(idx, 1);
       });
 
-      // Draw AP
+      // 2. AP Central
       ctx.beginPath();
       ctx.arc(ap.x, ap.y, ap.radius, 0, Math.PI * 2);
       ctx.fillStyle = '#38bdf8';
@@ -432,9 +432,9 @@
       ctx.fillText("AP Central", ap.x, ap.y - 32);
       ctx.fillStyle = '#94a3b8';
       ctx.font = '10px Segoe UI';
-      ctx.fillText(ap.ssid, ap.x, ap.y + 40);
+      ctx.fillText(`${ap.ssid} (Ch ${currentChannel})`, ap.x, ap.y + 40);
 
-      // Draw Wall
+      // 3. Wall
       if (isObstacleActive) {
         ctx.fillStyle = '#ef4444';
         ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
@@ -446,7 +446,7 @@
         ctx.fillText("PARED", wall.x + wall.w / 2, wall.y + wall.h / 2);
       }
 
-      // Draw Devices & Lines
+      // 4. Devices & Lines
       devices.forEach(dev => {
         const isBlocked = lineIntersectsWall(ap.x, ap.y, dev.x, dev.y);
 
@@ -477,16 +477,29 @@
         ctx.fillText(dev.type, dev.x, dev.y + 30);
       });
 
-      // Draw Packets
+      // 5. BIDIRECTIONAL Packets Logic (Uplink + Downlink)
       if (isTrafficActive) {
         packetTimer++;
-        if (packetTimer % 15 === 0) {
+        if (packetTimer % 18 === 0) {
           devices.forEach(dev => {
+            const blocked = lineIntersectsWall(ap.x, ap.y, dev.x, dev.y);
+            
+            // Uplink Packet (Dispositivo -> AP)
+            packets.push({
+              sx: dev.x, sy: dev.y, tx: ap.x, ty: ap.y,
+              progress: 0,
+              speed: (frequency === 5.0 ? 0.04 : 0.02),
+              blocked: blocked,
+              color: '#38bdf8' // Azul: Subida
+            });
+
+            // Downlink Packet (AP -> Dispositivo)
             packets.push({
               sx: ap.x, sy: ap.y, tx: dev.x, ty: dev.y,
               progress: 0,
               speed: (frequency === 5.0 ? 0.04 : 0.02),
-              blocked: lineIntersectsWall(ap.x, ap.y, dev.x, dev.y)
+              blocked: blocked,
+              color: '#22c55e' // Verde: Bajada
             });
           });
         }
@@ -498,8 +511,8 @@
         let currY = p.sy + (p.ty - p.sy) * p.progress;
 
         ctx.beginPath();
-        ctx.arc(currX, currY, p.blocked ? 4 : 5, 0, Math.PI * 2);
-        ctx.fillStyle = p.blocked ? '#ef4444' : '#22c55e';
+        ctx.arc(currX, currY, p.blocked ? 3.5 : 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = p.blocked ? '#ef4444' : p.color;
         ctx.fill();
 
         if (p.progress >= 1) packets.splice(idx, 1);
@@ -510,10 +523,10 @@
       requestAnimationFrame(animate);
     }
 
-    setTimeout(() => {
+    window.onload = () => {
       initSimulation();
       animate();
-    }, 100);
+    };
   </script>
 </body>
 </html>
