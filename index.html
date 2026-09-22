@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Interactivo - Funcionamiento de un Access Point (AP)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        cyber: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            accent: '#06b6d4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar for dark tech theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0284c7;
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col justify-between">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-sky-500/10 border border-sky-500/30 rounded-xl text-sky-400">
+                    <i class="fa-solid font-bold fa-wifi text-2xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white flex items-center gap-2">
+                        AP Sim Lab <span class="text-xs font-semibold px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">v2.5 Interactive</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Simulador Didáctico de Funcionamiento de Access Point Wi-Fi</p>
+                </div>
+            </div>
+
+            <!-- Tab Navigation Buttons -->
+            <nav class="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs sm:text-sm">
+                <button id="tab-sim" onclick="switchTab('sim')" class="px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all bg-sky-600 text-white shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-gamepad"></i> Simulador
+                </button>
+                <button id="tab-process" onclick="switchTab('process')" class="px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-project"></i> Proceso Conexión
+                </button>
+                <button id="tab-brands" onclick="switchTab('brands')" class="px-3 sm:px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group"></i> Marcas & Pros/Contras
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+
+        <!-- SECTION 1: SIMULATOR VIEW -->
+        <div id="view-sim" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Panel: Canvas Display -->
+            <div class="lg:col-span-8 flex flex-col gap-4">
+                <div class="relative bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col">
+                    
+                    <!-- Canvas Toolbar Header -->
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-950/60 border-b border-slate-800 text-xs text-slate-400">
+                        <div class="flex items-center gap-3">
+                            <span class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span class="text-slate-200 font-semibold">Wi-Fi RF Canvas</span>
+                            </span>
+                            <span class="hidden sm:inline border-l border-slate-800 h-4"></span>
+                            <span class="hidden sm:inline text-slate-400"><i class="fa-regular fa-hand-pointer mr-1"></i> Arrastra dispositivos o haz clic en ellos</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="resetSimulation()" class="hover:bg-slate-800 px-2 py-1 rounded text-slate-300 transition flex items-center gap-1" title="Reiniciar Entorno">
+                                <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Reiniciar</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Interactive Canvas -->
+                    <div class="relative w-full aspect-[16/10] bg-slate-950 overflow-hidden">
+                        <canvas id="wifiCanvas" class="w-full h-full block cursor-crosshair"></canvas>
+
+                        <!-- Canvas Dynamic Overlay Stats -->
+                        <div class="absolute bottom-3 left-3 bg-slate-900/90 border border-slate-800 p-2.5 rounded-xl text-xs space-y-1 backdrop-blur pointer-events-none">
+                            <div class="text-slate-400 flex items-center justify-between gap-4">
+                                <span>Canal seleccionado:</span>
+                                <span id="stat-channel" class="font-mono text-sky-400 font-bold">Ch 6 (2437 MHz)</span>
+                            </div>
+                            <div class="text-slate-400 flex items-center justify-between gap-4">
+                                <span>Dispositivos Activos:</span>
+                                <span id="stat-dev-count" class="font-mono text-emerald-400 font-bold">0</span>
+                            </div>
+                            <div class="text-slate-400 flex items-center justify-between gap-4">
+                                <span>Frecuencia Actual:</span>
+                                <span id="stat-band" class="font-mono text-purple-400 font-bold">2.4 GHz</span>
+                            </div>
+                        </div>
+
+                        <!-- Legend Overlay -->
+                        <div class="absolute top-3 right-3 bg-slate-900/90 border border-slate-800 p-2 rounded-xl text-[10px] space-y-1 backdrop-blur pointer-events-none">
+                            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-400"></span> Beacon (SSID)</div>
+                            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400"></span> Paquetes Data</div>
+                            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Autenticación</div>
+                            <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Pared / Obstáculo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Panel Below Canvas -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    
+                    <!-- Add Device Controls -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-sky-400"></i> Agregar Dispositivos
+                        </h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="addDevice('laptop')" class="flex flex-col items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700/80 rounded-lg text-slate-200 border border-slate-700 transition">
+                                <i class="fa-solid fa-laptop text-lg mb-1 text-sky-400"></i>
+                                <span class="text-[11px]">Laptop</span>
+                            </button>
+                            <button onclick="addDevice('phone')" class="flex flex-col items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700/80 rounded-lg text-slate-200 border border-slate-700 transition">
+                                <i class="fa-solid fa-mobile-screen-button text-lg mb-1 text-emerald-400"></i>
+                                <span class="text-[11px]">Móvil</span>
+                            </button>
+                            <button onclick="addDevice('iot')" class="flex flex-col items-center justify-center p-2.5 bg-slate-800 hover:bg-slate-700/80 rounded-lg text-slate-200 border border-slate-700 transition">
+                                <i class="fa-solid fa-microchip text-lg mb-1 text-purple-400"></i>
+                                <span class="text-[11px]">IoT / TV</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RF Environment Settings -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-sky-400"></i> Configuración AP
+                        </h3>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between items-center">
+                                <label class="text-slate-300">Frecuencia / Banda:</label>
+                                <select id="bandSelect" onchange="updateBandConfig()" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-sky-300 focus:outline-none">
+                                    <option value="2.4">2.4 GHz (Mayor Alcance)</option>
+                                    <option value="5">5.0 GHz (Alta Velocidad)</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <label class="text-slate-300">Canal Wi-Fi:</label>
+                                <select id="channelSelect" onchange="updateChannelConfig()" class="bg-slate-950 border border-slate-700 rounded px-2 py-1 text-amber-300 focus:outline-none">
+                                    <option value="1">Canal 1 (Limpio)</option>
+                                    <option value="6" selected>Canal 6 (Limpio)</option>
+                                    <option value="11">Canal 11 (Limpio)</option>
+                                    <option value="interfere">Canal 6 (Saturado/Interferencia)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Environment Obstacles & Test -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                            <i class="fa-solid fa-cubes text-sky-400"></i> Entorno y Pruebas
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="toggleObstacles()" id="btn-wall" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-200 transition flex items-center justify-between">
+                                <span><i class="fa-solid fa-border-all text-rose-400 mr-1.5"></i> Agregar Pared Concreto</span>
+                                <span id="status-wall" class="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-400">OFF</span>
+                            </button>
+                            <button onclick="triggerPingAll()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 rounded-lg text-xs font-semibold text-white shadow-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> Simular Tráfico de Datos (Ping)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Device Inspector & Network Logs -->
+            <div class="lg:col-span-4 flex flex-col gap-4">
+                
+                <!-- Inspector Card -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h2 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info text-sky-400"></i> Inspector de Dispositivo
+                        </h2>
+                        <span id="inspect-status" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">Ninguno seleccionado</span>
+                    </div>
+
+                    <div id="inspector-content" class="text-xs space-y-2 text-slate-400">
+                        <p class="italic text-slate-500 text-center py-4">Haz clic en un cliente o en el Access Point dentro de la pantalla para inspeccionar sus métricas de conexión RF.</p>
+                    </div>
+                </div>
+
+                <!-- Real-time Console Packet Sniffer -->
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex-1 flex flex-col space-y-2 min-h-[300px]">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <h2 class="font-semibold text-sm text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-emerald-400"></i> Wi-Fi Packet Log (Sniffer)
+                        </h2>
+                        <button onclick="clearLogs()" class="text-[10px] text-slate-400 hover:text-slate-200 transition">
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <!-- Log Stream Console -->
+                    <div id="packet-logs" class="bg-slate-950 border border-slate-800/80 rounded-lg p-3 flex-1 font-mono text-[11px] overflow-y-auto space-y-1.5 h-64">
+                        <div class="text-slate-500">[SYSTEM] Inicializando simulador AP 802.11ax...</div>
+                        <div class="text-sky-400">[BEACON] AP 'UniFi-Lab-WiFi' transmitiendo trama Beacon (Ch 6)</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SECTION 2: PROCESS & FRAMES STEP BY STEP -->
+        <div id="view-process" class="hidden space-y-6">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                <h2 class="text-xl font-bold text-slate-100 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-next text-sky-400"></i> Proceso de Conexión Wi-Fi Paso a Paso
+                </h2>
+                <p class="text-slate-400 text-sm mb-6">Aprende detalladamente qué ocurre a nivel de tramas (802.11) cuando un dispositivo inalámbrico detecta y se conecta a un Access Point.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Step 1 -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3 relative">
+                        <span class="absolute top-3 right-3 text-2xl font-bold text-slate-800">01</span>
+                        <div class="w-10 h-10 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-bold">
+                            <i class="fa-solid fa-tower-broadcast"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-200 text-sm">1. Difusión SSID (Beacon)</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            El Access Point transmite continuamente tramas **Beacon** (cada ~100ms) anunciando el nombre de la red (SSID), capacidades de cifrado y canales soportados.
+                        </p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3 relative">
+                        <span class="absolute top-3 right-3 text-2xl font-bold text-slate-800">02</span>
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold">
+                            <i class="fa-solid fa-handshake"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-200 text-sm">2. Autenticación & Asociación</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            El cliente solicita acceso (*Auth Request*). El AP valida las credenciales y responde con un *Association Response*, registrando la MAC en sus tablas internas.
+                        </p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3 relative">
+                        <span class="absolute top-3 right-3 text-2xl font-bold text-slate-800">03</span>
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold">
+                            <i class="fa-solid fa-network-wired"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-200 text-sm">3. Asignación de IP (DHCP)</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Una vez enlazado el medio físico, el dispositivo negocia una dirección IP válida mediante tramas DHCP a través del AP con el Router principal.
+                        </p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-3 relative">
+                        <span class="absolute top-3 right-3 text-2xl font-bold text-slate-800">04</span>
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="font-semibold text-slate-200 text-sm">4. Transmisión CSMA/CA</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Para evitar colisiones en el aire, se usa **CSMA/CA** (Carrier Sense Multiple Access with Collision Avoidance). Los dispositivos "escuchan" antes de hablar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- CSMA/CA Detailed Breakdown Box -->
+                <div class="mt-6 bg-slate-950 border border-sky-900/50 p-4 rounded-xl flex flex-col md:flex-row items-center gap-4">
+                    <div class="p-3 bg-sky-500/20 rounded-full text-sky-400 text-2xl">
+                        <i class="fa-solid fa-circle-nodes"></i>
+                    </div>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <span class="font-bold text-sky-300 uppercase tracking-wider text-[11px]">¿Por qué Wi-Fi no es igual al Ethernet por Cable?</span>
+                        <p>
+                            El aire es un **medio compartido semi-dúplex** (Half-Duplex). Solo una antena puede transmitir a la vez en la misma frecuencia. El AP coordina los turnos mediante algoritmos de retroceso (*Backoff timer*) para garantizar que los paquetes no choquen entre sí.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: BRANDS & PROS/CONS -->
+        <div id="view-brands" class="hidden space-y-6">
+            
+            <!-- Brands Matrix -->
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-4">
+                <h2 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                    <i class="fa-solid fa-tags text-sky-400"></i> Principales Marcas de Access Points en el Mercado
+                </h2>
+                <p class="text-slate-400 text-sm">Resumen de los fabricantes líderes según el segmento de implementación (Enterprise, PyME y Hogar):</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                    
+                    <!-- Ubiquiti UniFi -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-2 hover:border-sky-500/50 transition">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-sky-400">Ubiquiti UniFi</h3>
+                            <span class="text-[10px] bg-sky-900/40 text-sky-300 px-2 py-0.5 rounded">PyME / Prosumer</span>
+                        </div>
+                        <p class="text-xs text-slate-400">
+                            Líder mundial por su relación costo-beneficio. Controlador centralizado por software gratuito y diseño aesthetic plano tipo "platillo".
+                        </p>
+                        <div class="text-[11px] text-slate-500 pt-1"><strong>Destacado:</strong> U6-Pro, U7-Pro (Wi-Fi 7)</div>
+                    </div>
+
+                    <!-- Cisco Meraki -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-2 hover:border-emerald-500/50 transition">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-emerald-400">Cisco Meraki</h3>
+                            <span class="text-[10px] bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Enterprise Global</span>
+                        </div>
+                        <p class="text-xs text-slate-400">
+                            Estándar corporativo de alta gama. Gestión 100% Cloud con analíticas avanzadas, SLA garantizado y seguridad de grado bancario.
+                        </p>
+                        <div class="text-[11px] text-slate-500 pt-1"><strong>Destacado:</strong> Serie MR46 / MR56</div>
+                    </div>
+
+                    <!-- Aruba Networks -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-2 hover:border-orange-500/50 transition">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-orange-400">Aruba (HPE)</h3>
+                            <span class="text-[10px] bg-orange-900/40 text-orange-300 px-2 py-0.5 rounded">Empresarial / Campus</span>
+                        </div>
+                        <p class="text-xs text-slate-400">
+                            Excelente arquitectura "Instant" (sin necesidad de controladora física). Alta resiliencia para universidades, estadios y hospitales.
+                        </p>
+                        <div class="text-[11px] text-slate-500 pt-1"><strong>Destacado:</strong> Aruba Instant On</div>
+                    </div>
+
+                    <!-- TP-Link Omada -->
+                    <div class="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-2 hover:border-teal-500/50 transition">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-teal-400">TP-Link Omada</h3>
+                            <span class="text-[10px] bg-teal-900/40 text-teal-300 px-2 py-0.5 rounded">Económico / Oficina</span>
+                        </div>
+                        <p class="text-xs text-slate-400">
+                            Alternativa competitiva a Ubiquiti. Ideal para negocios locales, hoteles pequeños y oficinas de presupuesto ajustado.
+                        </p>
+                        <div class="text-[11px] text-slate-500 pt-1"><strong>Destacado:</strong> EAP660 HD</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pros and Cons Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Ventajas -->
+                <div class="bg-slate-900 border border-emerald-900/40 p-5 rounded-2xl space-y-3">
+                    <h3 class="text-base font-bold text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Ventajas Clave de un Access Point
+                    </h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                            <span><strong>Escalabilidad Centralizada:</strong> Permite conectar cientos de clientes simultáneos con Roaming transparente (Seamless Roaming 802.11r) sin desconexiones al caminar.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                            <span><strong>Alimentación PoE (Power over Ethernet):</strong> Recibe energía y datos por un solo cable de red (Cat6), facilitando su montaje en techo o pared.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-check text-emerald-400 mt-0.5"></i>
+                            <span><strong>Múltiples SSIDs y VLANs:</strong> Puedes emitir varias redes aisladas (Ej. "Empleados", "Invitados", "IoT") desde un mismo equipo.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Desventajas -->
+                <div class="bg-slate-900 border border-rose-900/40 p-5 rounded-2xl space-y-3">
+                    <h3 class="text-base font-bold text-rose-400 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-xmark"></i> Desventajas y Limitaciones
+                    </h3>
+                    <ul class="space-y-2 text-xs text-slate-300">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                            <span><strong>Requiere Infraestructura Cableada:</strong> A diferencia de repetidores Wi-Fi simples, un AP rinde al 100% solo si se conecta mediante cable físico hacia el Router/Switch.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                            <span><strong>Costo y Configuración Inicial:</strong> Requieren conocimientos previos de redes (redes VLAN, canales, controladoras) e inversión en Switches PoE.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-xmark text-rose-400 mt-0.5"></i>
+                            <span><strong>Interferencia de RF:</strong> Obstrucciones físicas (concreto, vidrio templado) atenuan severamente las frecuencias de 5GHz y 6GHz.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer class="border-t border-slate-800 bg-slate-900/50 py-3 text-center text-xs text-slate-500">
+        <p>Desarrollado para Presentaciones Académicas sobre Redes de Comunicación &bull; Listo para GitHub Pages</p>
+    </footer>
+
+    <script>
+        // --- TAB SWITCHING SYSTEM ---
+        function switchTab(tab) {
+            ['sim', 'process', 'brands'].forEach(t => {
+                const view = document.getElementById(`view-${t}`);
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    view.classList.remove('hidden');
+                    btn.classList.add('bg-sky-600', 'text-white');
+                    btn.classList.remove('text-slate-400', 'hover:bg-slate-900');
+                } else {
+                    view.classList.add('hidden');
+                    btn.classList.remove('bg-sky-600', 'text-white');
+                    btn.classList.add('text-slate-400', 'hover:bg-slate-900');
+                }
+            });
+        }
+
+        // --- CANVAS SIMULATOR ENGINE ---
+        const canvas = document.getElementById('wifiCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // State Variables
+        let width = 0;
+        let height = 0;
+
+        let ap = {
+            x: 0,
+            y: 0,
+            radius: 20,
+            ssid: 'UniFi-Lab-WiFi',
+            band: '2.4', // 2.4 or 5
+            channel: '6',
+            power: 180, // Coverage radius pixels
+            waveRadius: 0
+        };
+
+        let router = {
+            x: 0,
+            y: 0
+        };
+
+        let devices = [];
+        let packets = [];
+        let selectedDevice = null;
+        let draggedDevice = null;
+        let hasWall = false;
+
+        // Resize Canvas dynamically
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            width = container.clientWidth;
+            height = container.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Position elements proportionally
+            ap.x = width * 0.45;
+            ap.y = height * 0.5;
+            router.x = width * 0.1;
+            router.y = height * 0.2;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        function initSimulation() {
+            resizeCanvas();
+            devices = [];
+            packets = [];
+
+            // Add Default Devices
+            devices.push({
+                id: 1,
+                type: 'laptop',
+                name: 'Laptop-Estudiante',
+                x: ap.x + 120,
+                y: ap.y - 60,
+                ip: '192.168.1.105',
+                mac: 'A4:C3:F0:12:88:01',
+                rssi: -52
+            });
+
+            devices.push({
+                id: 2,
+                type: 'phone',
+                name: 'iPhone-Docente',
+                x: ap.x - 110,
+                y: ap.y + 90,
+                ip: '192.168.1.106',
+                mac: 'B2:D1:E9:44:90:72',
+                rssi: -65
+            });
+
+            devices.push({
+                id: 3,
+                type: 'iot',
+                name: 'Sensor-IoT-Lab',
+                x: ap.x + 190,
+                y: ap.y + 110,
+                ip: '192.168.1.107',
+                mac: 'E8:88:22:11:00:DF',
+                rssi: -82
+            });
+
+            logMessage('BEACON', `AP '${ap.ssid}' iniciado en Canal ${ap.channel} (${ap.band}GHz)`);
+            updateStatsUI();
+        }
+
+        function addDevice(type) {
+            const id = Date.now();
+            const names = { laptop: 'Laptop-User', phone: 'Smartphone', iot: 'Smart-Camera' };
+            const offsetAngle = Math.random() * Math.PI * 2;
+            const dist = 80 + Math.random() * 100;
+
+            const newDev = {
+                id,
+                type,
+                name: `${names[type]}-${Math.floor(Math.random()*90 + 10)}`,
+                x: Math.min(Math.max(ap.x + Math.cos(offsetAngle) * dist, 50), width - 50),
+                y: Math.min(Math.max(ap.y + Math.sin(offsetAngle) * dist, 50), height - 50),
+                ip: `192.168.1.${Math.floor(Math.random()*150 + 10)}`,
+                mac: `D4:${Math.floor(Math.random()*89+10)}:${Math.floor(Math.random()*89+10)}:FF:10`,
+                rssi: -60
+            };
+
+            devices.push(newDev);
+            logMessage('AUTH', `Dispositivo ${newDev.name} se asoció correctamente al AP`);
+            updateStatsUI();
+        }
+
+        function toggleObstacles() {
+            hasWall = !hasWall;
+            const statusEl = document.getElementById('status-wall');
+            const btnEl = document.getElementById('btn-wall');
+            if (hasWall) {
+                statusEl.textContent = 'ON';
+                statusEl.className = 'text-[10px] bg-rose-500/20 text-rose-300 px-1.5 py-0.5 rounded font-bold';
+                btnEl.classList.add('border-rose-500/50');
+                logMessage('SYSTEM', 'Pared de concreto agregada (Atenuación -18dBm)');
+            } else {
+                statusEl.textContent = 'OFF';
+                statusEl.className = 'text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-400';
+                btnEl.classList.remove('border-rose-500/50');
+                logMessage('SYSTEM', 'Pared removida');
+            }
+        }
+
+        function triggerPingAll() {
+            if (devices.length === 0) return;
+            devices.forEach((dev, idx) => {
+                setTimeout(() => {
+                    sendDataPacket(dev, ap);
+                }, idx * 300);
+            });
+        }
+
+        function sendDataPacket(from, to, type = 'data') {
+            packets.push({
+                x: from.x,
+                y: from.y,
+                targetX: to.x,
+                targetY: to.y,
+                progress: 0,
+                speed: 0.025,
+                type: type, // 'data', 'beacon', 'auth'
+                fromDev: from,
+                toDev: to
+            });
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Check AP click
+            const distAP = Math.hypot(clickX - ap.x, clickY - ap.y);
+            if (distAP < ap.radius + 10) {
+                inspectAP();
+                return;
+            }
+
+            // Check devices click
+            let found = false;
+            devices.forEach(dev => {
+                const d = Math.hypot(clickX - dev.x, clickY - dev.y);
+                if (d < 20) {
+                    selectedDevice = dev;
+                    draggedDevice = dev;
+                    inspectDevice(dev);
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                selectedDevice = null;
+                document.getElementById('inspector-content').innerHTML = `
+                    <p class="italic text-slate-500 text-center py-4">Haz clic en un cliente o en el Access Point dentro de la pantalla para inspeccionar sus métricas de conexión RF.</p>
+                `;
+                document.getElementById('inspect-status').textContent = 'Ninguno seleccionado';
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (draggedDevice) {
+                const rect = canvas.getBoundingClientRect();
+                draggedDevice.x = e.clientX - rect.left;
+                draggedDevice.y = e.clientY - rect.top;
+                inspectDevice(draggedDevice);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            draggedDevice = null;
+        });
+
+        // Touch Support for mobile users
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const clickX = touch.clientX - rect.left;
+                const clickY = touch.clientY - rect.top;
+
+                devices.forEach(dev => {
+                    const d = Math.hypot(clickX - dev.x, clickY - dev.y);
+                    if (d < 25) {
+                        draggedDevice = dev;
+                        selectedDevice = dev;
+                        inspectDevice(dev);
+                    }
+                });
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (draggedDevice && e.touches.length === 1) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                draggedDevice.x = touch.clientX - rect.left;
+                draggedDevice.y = touch.clientY - rect.top;
+                inspectDevice(draggedDevice);
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            draggedDevice = null;
+        });
+
+        function calculateRSSI(dev) {
+            let dist = Math.hypot(dev.x - ap.x, dev.y - ap.y);
+            // Wall attenuation check
+            let wallLoss = 0;
+            if (hasWall && (dev.x > width * 0.65 || ap.x > width * 0.65)) {
+                wallLoss = 18;
+            }
+
+            let baseRssi = ap.band === '2.4' ? -30 : -35;
+            let factor = ap.band === '2.4' ? 0.25 : 0.4;
+            let rssi = Math.round(baseRssi - (dist * factor) - wallLoss);
+            
+            // Channel interference noise
+            if (document.getElementById('channelSelect').value === 'interfere') {
+                rssi -= 12;
+            }
+
+            dev.rssi = Math.max(Math.min(rssi, -30), -95);
+            return dev.rssi;
+        }
+
+        function inspectDevice(dev) {
+            const rssi = calculateRSSI(dev);
+            let quality = 'Excelente';
+            let qColor = 'text-emerald-400';
+            if (rssi < -65) { quality = 'Buena'; qColor = 'text-sky-400'; }
+            if (rssi < -75) { quality = 'Regular'; qColor = 'text-amber-400'; }
+            if (rssi < -85) { quality = 'Pobre / Desconexión'; qColor = 'text-rose-400'; }
+
+            document.getElementById('inspect-status').textContent = 'Cliente Activo';
+            document.getElementById('inspector-content').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-slate-200 font-bold border-b border-slate-800 pb-1">
+                        <span>${dev.name}</span>
+                        <span class="text-[10px] bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded uppercase">${dev.type}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-[11px]">
+                        <div><span class="text-slate-500">IP:</span> <span class="font-mono text-slate-300">${dev.ip}</span></div>
+                        <div><span class="text-slate-500">MAC:</span> <span class="font-mono text-slate-300">${dev.mac}</span></div>
+                        <div><span class="text-slate-500">Señal RSSI:</span> <span class="font-mono font-bold ${qColor}">${rssi} dBm</span></div>
+                        <div><span class="text-slate-500">Calidad:</span> <span class="${qColor}">${quality}</span></div>
+                    </div>
+                    <div class="pt-2">
+                        <button onclick="sendDataPacket(selectedDevice, ap)" class="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded font-medium text-xs transition">
+                            <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Enviar Tráfico UDP/TCP
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function inspectAP() {
+            document.getElementById('inspect-status').textContent = 'Access Point';
+            document.getElementById('inspector-content').innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-slate-200 font-bold border-b border-slate-800 pb-1">
+                        <span>Access Point Principal</span>
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">ONLINE</span>
+                    </div>
+                    <div class="space-y-1 text-[11px]">
+                        <div class="flex justify-between"><span class="text-slate-500">SSID:</span><span class="font-mono text-sky-400">${ap.ssid}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Banda:</span><span class="font-mono text-slate-300">${ap.band} GHz</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Canal:</span><span class="font-mono text-amber-300">${ap.channel}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Clientes Conectados:</span><span class="font-mono text-emerald-400">${devices.length}</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">Uplink Ethernet:</span><span class="font-mono text-slate-300">1000 Mbps (PoE+)</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateBandConfig() {
+            ap.band = document.getElementById('bandSelect').value;
+            ap.power = ap.band === '2.4' ? 210 : 130; // 2.4GHz propagates further
+            logMessage('SYSTEM', `Frecuencia del AP cambiada a ${ap.band} GHz (Alcance RF ajustado)`);
+            updateStatsUI();
+        }
+
+        function updateChannelConfig() {
+            const chVal = document.getElementById('channelSelect').value;
+            if (chVal === 'interfere') {
+                ap.channel = '6 (Interferencia)';
+                logMessage('WARN', '¡Canal 6 saturado con ruido externo! Pérdida de rendimiento.');
+            } else {
+                ap.channel = chVal;
+                logMessage('SYSTEM', `Canal Wi-Fi configurado a Canal ${ap.channel}`);
+            }
+            updateStatsUI();
+        }
+
+        function updateStatsUI() {
+            document.getElementById('stat-channel').textContent = `Ch ${ap.channel}`;
+            document.getElementById('stat-dev-count').textContent = devices.length;
+            document.getElementById('stat-band').textContent = `${ap.band} GHz`;
+        }
+
+        function logMessage(tag, text) {
+            const logsContainer = document.getElementById('packet-logs');
+            const time = new Date().toLocaleTimeString().split(' ')[0];
+            
+            const tagColors = {
+                'BEACON': 'text-sky-400',
+                'DATA': 'text-emerald-400',
+                'AUTH': 'text-amber-400',
+                'SYSTEM': 'text-purple-400',
+                'WARN': 'text-rose-400'
+            };
+
+            const colorClass = tagColors[tag] || 'text-slate-400';
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span class="text-slate-600">[${time}]</span> <span class="${colorClass} font-bold">[${tag}]</span> ${text}`;
+            
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('packet-logs').innerHTML = '';
+        }
+
+        function resetSimulation() {
+            initSimulation();
+            logMessage('SYSTEM', 'Entorno de simulación reiniciado');
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Draw Ethernet Link between Router and AP
+            ctx.beginPath();
+            ctx.moveTo(router.x, router.y);
+            ctx.lineTo(ap.x, ap.y);
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([6, 6]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Router Icon & Label
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(router.x, router.y, 16, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '10px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('Router/WAN', router.x, router.y + 28);
+
+            // 2. Draw AP Radio Waves Expansion
+            ap.waveRadius += ap.band === '2.4' ? 0.8 : 1.3;
+            if (ap.waveRadius > ap.power) {
+                ap.waveRadius = ap.radius;
+                // Emit automatic beacon log occasionally
+                if (Math.random() < 0.05) {
+                    logMessage('BEACON', `Frame Beacon SSID '${ap.ssid}' emitido`);
+                }
+            }
+
+            // Outer Coverage Area Circle
+            ctx.beginPath();
+            ctx.arc(ap.x, ap.y, ap.power, 0, Math.PI * 2);
+            ctx.fillStyle = ap.band === '2.4' ? 'rgba(14, 165, 233, 0.04)' : 'rgba(168, 85, 247, 0.04)';
+            ctx.fill();
+            ctx.strokeStyle = ap.band === '2.4' ? 'rgba(14, 165, 233, 0.2)' : 'rgba(168, 85, 247, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Expanding RF Ripple
+            ctx.beginPath();
+            ctx.arc(ap.x, ap.y, ap.waveRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = ap.band === '2.4' ? `rgba(56, 189, 248, ${1 - ap.waveRadius / ap.power})` : `rgba(192, 132, 252, ${1 - ap.waveRadius / ap.power})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 3. Draw Concrete Wall Obstacle if Enabled
+            if (hasWall) {
+                const wallX = width * 0.65;
+                ctx.fillStyle = 'rgba(244, 63, 94, 0.3)';
+                ctx.strokeStyle = '#f43f5e';
+                ctx.lineWidth = 2;
+                ctx.fillRect(wallX, 40, 16, height - 80);
+                ctx.strokeRect(wallX, 40, 16, height - 80);
+
+                ctx.fillStyle = '#f43f5e';
+                ctx.font = 'bold 10px Inter';
+                ctx.fillText('Pared Concreto (-18dBm)', wallX + 8, 30);
+            }
+
+            // 4. Draw Access Point Central Node
+            ctx.shadowColor = '#0ea5e9';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(ap.x, ap.y, ap.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset shadow
+
+            // AP Antenna/WiFi Symbol
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px FontAwesome';
+            ctx.fillText('\uf1eb', ap.x, ap.y + 4);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 11px Inter';
+            ctx.fillText(ap.ssid, ap.x, ap.y + 35);
+
+            // 5. Render Devices and Signal Link Lines
+            devices.forEach(dev => {
+                const rssi = calculateRSSI(dev);
+                const isSelected = selectedDevice === dev;
+
+                // Line connection to AP
+                ctx.beginPath();
+                ctx.moveTo(dev.x, dev.y);
+                ctx.lineTo(ap.x, ap.y);
+                
+                let lineAlpha = Math.max(0.05, 1 - Math.abs(rssi) / 100);
+                ctx.strokeStyle = rssi > -70 ? `rgba(52, 211, 153, ${lineAlpha})` : `rgba(251, 191, 36, ${lineAlpha})`;
+                ctx.lineWidth = isSelected ? 2 : 1;
+                ctx.setLineDash([4, 4]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Device Circle Icon
+                ctx.fillStyle = isSelected ? '#0284c7' : '#1e293b';
+                ctx.strokeStyle = isSelected ? '#38bdf8' : '#475569';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(dev.x, dev.y, 16, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Draw Icon FontAwesome Glyph
+                ctx.fillStyle = '#f8fafc';
+                ctx.font = '11px FontAwesome';
+                let glyph = '\uf109'; // Laptop
+                if (dev.type === 'phone') glyph = '\uf3ce';
+                if (dev.type === 'iot') glyph = '\uf2db';
+                ctx.fillText(glyph, dev.x, dev.y + 4);
+
+                // Device Name & RSSI Badge
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '10px Inter';
+                ctx.fillText(dev.name, dev.x, dev.y + 28);
+                
+                ctx.fillStyle = rssi > -70 ? '#34d399' : rssi > -82 ? '#fbbf24' : '#f43f5e';
+                ctx.font = 'bold 9px JetBrains Mono';
+                ctx.fillText(`${rssi} dBm`, dev.x, dev.y + 39);
+            });
+
+            // 6. Update & Render Flying Packets
+            for (let i = packets.length - 1; i >= 0; i--) {
+                let p = packets[i];
+                p.progress += p.speed;
+
+                p.x = p.x + (p.targetX - p.x) * p.progress;
+                p.y = p.y + (p.targetY - p.y) * p.progress;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = p.type === 'data' ? '#34d399' : '#fbbf24';
+                ctx.fill();
+
+                if (p.progress >= 1) {
+                    // Packet arrived at AP, now forward to Router if origin was device
+                    if (p.toDev === ap && p.type === 'data') {
+                        logMessage('DATA', `Paquete de ${p.fromDev.name} retransmitido al Router WAN`);
+                        sendDataPacket(ap, router, 'data');
+                    } else if (p.toDev === router) {
+                        logMessage('DATA', `[EXITO] Paquete llegó a Internet correctamente`);
+                    }
+                    packets.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize when Window loads
+        window.onload = function() {
+            initSimulation();
+            animate();
+        };
+    </script>
+</body>
+</html>
